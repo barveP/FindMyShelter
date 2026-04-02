@@ -194,6 +194,7 @@ components.html(f"""
 
 # ─── Palette + helpers ────────────────────────────────────────────────────────
 PALETTE = ["#c9a500","#e07b3a","#4a9e6b","#4a7fc1","#9b6b9e","#c95c5c","#6b9e9e"]
+OUTCOME_COLORS = {"Adopted": "#4a9e6b", "Not Adopted": "#c95c5c"}
 SHELTER_COLORS = {"Austin": "#c9a500", "Long Beach": "#4a7fc1", "San Jose": "#4a9e6b"}
 
 def section(label):
@@ -210,9 +211,9 @@ def plotly_defaults(fig, height=340):
         plot_bgcolor="rgba(0,0,0,0)",
         font=dict(family="Inter", color="#4b3b16"),
         margin=dict(l=10, r=10, t=10, b=10),
-        legend=dict(bgcolor="rgba(0,0,0,0)", borderwidth=0),
-        xaxis=dict(gridcolor="rgba(180,160,80,0.10)", linecolor="rgba(180,160,80,0.2)"),
-        yaxis=dict(gridcolor="rgba(180,160,80,0.10)", linecolor="rgba(180,160,80,0.2)"),
+        legend=dict(bgcolor="rgba(0,0,0,0)", borderwidth=0, font=dict(color="#1e1a10")),
+        xaxis=dict(gridcolor="rgba(180,160,80,0.10)", linecolor="rgba(180,160,80,0.2)", tickfont=dict(color="#1e1a10"), title_font=dict(color="#1e1a10")),
+        yaxis=dict(gridcolor="rgba(180,160,80,0.10)", linecolor="rgba(180,160,80,0.2)", tickfont=dict(color="#1e1a10"), title_font=dict(color="#1e1a10")),
     )
     return fig
 
@@ -281,7 +282,7 @@ df_all = load_data()
 # ─── Nav bar ──────────────────────────────────────────────────────────────────
 nav_left, nav_right_1, nav_right_2 = st.columns([6, 1.6, 1.8])
 with nav_left:
-    st.markdown('<div class="nav-brand" style="padding:0.6rem 0;">🐾 <span>Pet</span> Adoption Finder</div>', unsafe_allow_html=True)
+    st.markdown('<div class="nav-brand" style="padding:0.6rem 0;">🐾 🐱<span style="color:#000000">FindMyShelter</span></div>', unsafe_allow_html=True)
 with nav_right_1:
     st.page_link("app.py", label="Shelter Finder")
 with nav_right_2:
@@ -530,10 +531,22 @@ with dem_c1:
     cond_df.columns = ["Condition","Count"]
     fig_donut = px.pie(cond_df, names="Condition", values="Count",
                        hole=0.5, color_discrete_sequence=PALETTE)
-    fig_donut.update_traces(textposition="outside", textinfo="percent+label",
-                            marker=dict(line=dict(color="#faf9f6", width=2)))
-    fig_donut.update_layout(showlegend=False)
-    plotly_defaults(fig_donut, height=320)
+    fig_donut.update_traces(
+        textposition="auto",
+        textinfo="percent+label",
+        textfont=dict(size=11, color="#1e1a10"),
+        pull=[0.03] * len(cond_df),
+        marker=dict(line=dict(color="#faf9f6", width=2)),
+        hovertemplate="<b>%{label}</b><br>Count: %{value:,}<br>Percentage: %{percent}<extra></extra>",
+    )
+    fig_donut.update_layout(
+        showlegend=True,
+        legend=dict(
+            orientation="h", yanchor="top", y=-0.1, xanchor="center", x=0.5,
+            font=dict(size=11, color="#1e1a10"),
+        ),
+    )
+    plotly_defaults(fig_donut, height=380)
     st.plotly_chart(fig_donut, use_container_width=True, config={"displayModeBar": False})
 
 with dem_c2:
@@ -542,10 +555,19 @@ with dem_c2:
     type_df.columns = ["AnimalType","Count"]
     fig_type = px.pie(type_df, names="AnimalType", values="Count",
                       hole=0.5, color_discrete_sequence=PALETTE)
-    fig_type.update_traces(textposition="outside", textinfo="percent+label",
-                           marker=dict(line=dict(color="#faf9f6", width=2)))
-    fig_type.update_layout(showlegend=False)
-    plotly_defaults(fig_type, height=320)
+    fig_type.update_traces(
+        textposition="none",
+        marker=dict(line=dict(color="#faf9f6", width=2)),
+        hovertemplate="<b>%{label}</b><br>Count: %{value:,}<br>Percentage: %{percent}<extra></extra>",
+    )
+    fig_type.update_layout(
+        showlegend=True,
+        legend=dict(
+            orientation="h", yanchor="top", y=-0.05, xanchor="center", x=0.5,
+            font=dict(size=11, color="#1e1a10"),
+        ),
+    )
+    plotly_defaults(fig_type, height=360)
     st.plotly_chart(fig_type, use_container_width=True, config={"displayModeBar": False})
 
 
@@ -555,8 +577,9 @@ st.markdown('<div class="chart-card"><div class="chart-title">Age Distribution b
 age_df = df[df["Age_Years"].between(0, 15)].copy()
 age_df["Outcome"] = age_df["Adopted"].map({1:"Adopted", 0:"Not Adopted"})
 fig_age = px.histogram(age_df, x="Age_Years", color="Outcome", nbins=60,
-                        barmode="overlay", opacity=0.72,
-                        color_discrete_map={"Adopted":"#4a9e6b","Not Adopted":"#c95c5c"})
+                        barmode="group", opacity=1,
+                        color_discrete_map=OUTCOME_COLORS)
+fig_age.update_traces(hovertemplate="Age: %{x:.1f} yrs<br>Count: %{y}<extra>%{fullData.name}</extra>")
 fig_age.update_layout(xaxis_title="Age (Years)", yaxis_title="Count",
                        legend_title="", bargap=0.02)
 plotly_defaults(fig_age, height=340)
