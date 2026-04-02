@@ -4,7 +4,7 @@ import streamlit.components.v1 as components
 from recommendation import recommend_shelter
 
 st.set_page_config(
-    page_title="Pet Adoption Shelter Finder",
+    page_title="FindMyShelter",
     page_icon="🐾",
     layout="wide",
     initial_sidebar_state="collapsed",
@@ -12,7 +12,7 @@ st.set_page_config(
 
 # ── Inject CSS + kill sidebar + style pills (all in one JS call) ──────────────
 _CSS = """
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Playfair+Display:wght@700&display=swap');
 
 *, *::before, *::after { font-family: 'Inter', sans-serif !important; box-sizing: border-box; }
 
@@ -64,10 +64,11 @@ h1,h2,h3,h4,h5,h6,p,label,div,span { color: #4b3b16 !important; }
     margin-bottom: 1.25rem;
 }
 .hero-title {
-    font-size: 3.1rem;
-    font-weight: 800;
-    line-height: 1.02;
-    letter-spacing: -0.04em;
+    font-family: 'Playfair Display', serif !important;
+    font-size: 2.2rem;
+    font-weight: 700;
+    line-height: 1.15;
+    letter-spacing: -0.02em;
     margin-bottom: 0.45rem;
     color: #5b4513 !important;
 }
@@ -182,7 +183,7 @@ div[data-testid="metric-container"] label { color: #8b7230 !important; }
 .paw1{top:18px;left:30px} .paw2{top:42px;right:24px;animation-delay:1s} .paw3{bottom:34px;left:12px;animation-delay:2s}
 @keyframes drift { 0%,100%{transform:translateY(0) rotate(-6deg)} 50%{transform:translateY(-8px) rotate(6deg)} }
 .pet-svg { position: absolute; left: 15px; top: 40px; width: 290px; height: 290px; }
-.tiny-note { text-align: center; margin-top: 1rem; color: #8b7230 !important; font-size: 0.95rem; }
+.tiny-note { text-align: center; margin-top: 1rem; color: #8b7230 !important; font-size: 1.15rem; }
 
 /* Progress bar */
 .stProgress > div > div > div > div { background-color: #ffd84d !important; }
@@ -258,7 +259,7 @@ components.html(f"""
 nav_l, nav_r1, nav_r2 = st.columns([6, 1.6, 1.8])
 with nav_l:
     st.markdown(
-        '<div style="padding:0.55rem 0;font-size:1.05rem;font-weight:800;color:#4b3b16 !important;">🐾 Pet Adoption Finder</div>',
+        '<div style="padding:0.55rem 0;font-size:1.05rem;font-weight:800;color:#4b3b16 !important;">🐾 The right shelter makes all the difference !</div>',
         unsafe_allow_html=True,
     )
 with nav_r1:
@@ -272,7 +273,7 @@ left, right = st.columns([1.1, 0.9], gap="large")
 with left:
     st.markdown("""
     <div class="hero-card">
-        <div class="hero-title">Pet Adoption Shelter Finder</div>
+        <div class="hero-title">🐱 Find My Shelter</div>
         <div class="hero-subtitle">
             Enter your pet's details to find the shelter where it has
             the highest chance of being adopted quickly.
@@ -289,11 +290,11 @@ with left:
     with st.form("prediction_form", border=False):
         c1, c2 = st.columns(2)
         with c1:
-            animal_type = st.selectbox("Animal Type", ["dog", "cat", "bird", "rabbit", "guinea pig", "reptile", "other"])
-            primary_color = st.selectbox("Primary Color", ["black", "brown", "white", "gray", "orange", "tan", "multicolor", "other"])
+            animal_type = st.selectbox("Animal Type", ["dog", "cat", "bird", "rabbit", "guinea pig", "reptile", "other"], index=None, placeholder="Select Animal Type")
+            primary_color = st.selectbox("Primary Color", ["black", "brown", "white", "gray", "orange", "tan", "multicolor", "other"], index=None, placeholder="Select Primary Color")
         with c2:
-            sex = st.selectbox("Sex", ["neutered", "spayed", "male", "female", "unknown"])
-            intake_condition = st.selectbox("Intake Condition", ["normal", "ill", "injured", "behavior", "other"])
+            sex = st.selectbox("Sex", ["neutered", "spayed", "male", "female", "unknown"], index=None, placeholder="Select Gender")
+            intake_condition = st.selectbox("Intake Condition", ["normal", "ill", "injured", "behavior", "other"], index=None, placeholder="Select Intake Condition")
 
         age_c1, age_c2 = st.columns(2)
         with age_c1:
@@ -307,21 +308,10 @@ with left:
     st.markdown("</div>", unsafe_allow_html=True)
 
     if submitted:
+        if not all([animal_type, primary_color, sex, intake_condition]):
+            st.error("Please fill in all fields before submitting.")
+            st.stop()
         results, best_shelter = recommend_shelter(animal_type, primary_color, sex, age, intake_condition)
-
-        st.markdown("<div style='height:1rem'></div>", unsafe_allow_html=True)
-        st.markdown(
-            f"<div class='result-good'>🏆 Recommended Shelter: <strong>{best_shelter}</strong></div>",
-            unsafe_allow_html=True,
-        )
-        st.markdown("<div style='height:1rem'></div>", unsafe_allow_html=True)
-        st.markdown("<div class='section-title'>Adoption Probability by Shelter</div>", unsafe_allow_html=True)
-
-        cols = st.columns(len(results))
-        for col, (shelter, prob) in zip(cols, results.items()):
-            with col:
-                st.metric(shelter, f"{prob}%")
-                st.progress(float(prob / 100))
 
 with right:
     st.markdown("""
@@ -352,5 +342,62 @@ with right:
             </div>
         </div>
     </div>
-    <div class="tiny-note">Find the best home for your found pet.</div>
+    <div class="tiny-note">Help them find their forever home, faster.</div>
     """, unsafe_allow_html=True)
+
+
+# ── Results section (full width, below both columns) ─────────────────────────
+if submitted and all([animal_type, primary_color, sex, intake_condition]):
+    st.markdown("<hr style='border:none; border-top:1.5px solid #ecd88c; margin:2rem 0;'>", unsafe_allow_html=True)
+
+    res_left, res_right = st.columns([1.1, 0.9], gap="large")
+
+    with res_left:
+        st.markdown(
+            f"<div class='result-good'>🏆 Recommended Shelter: <strong>{best_shelter}</strong></div>",
+            unsafe_allow_html=True,
+        )
+        st.markdown("<div style='height:1rem'></div>", unsafe_allow_html=True)
+        st.markdown("<div class='section-title'>Adoption Probability by Shelter</div>", unsafe_allow_html=True)
+
+        cols = st.columns(len(results))
+        for col, (shelter, prob) in zip(cols, results.items()):
+            with col:
+                st.metric(shelter, f"{prob}%")
+                st.progress(float(prob / 100))
+
+    with res_right:
+        best_prob = max(results.values())
+        if best_prob >= 50:
+            mood_mouth = '<path d="M70 90 Q85 110 100 90" stroke="#5b4513" stroke-width="4" fill="none" stroke-linecap="round"/>'
+            mood_eyes = '<circle cx="65" cy="68" r="5" fill="#4b3b16"/><circle cx="105" cy="68" r="5" fill="#4b3b16"/>'
+            mood_text = "Great match! This shelter looks perfect!"
+        elif best_prob >= 30:
+            mood_mouth = '<path d="M72 95 Q85 102 98 95" stroke="#5b4513" stroke-width="4" fill="none" stroke-linecap="round"/>'
+            mood_eyes = '<circle cx="65" cy="68" r="5" fill="#4b3b16"/><circle cx="105" cy="68" r="5" fill="#4b3b16"/>'
+            mood_text = "Decent chance — worth a try!"
+        else:
+            mood_mouth = '<line x1="72" y1="98" x2="98" y2="98" stroke="#5b4513" stroke-width="4" stroke-linecap="round"/>'
+            mood_eyes = '<circle cx="65" cy="70" r="5" fill="#4b3b16"/><circle cx="105" cy="70" r="5" fill="#4b3b16"/>'
+            mood_text = "Low chances — but don't give up!"
+
+        st.markdown(f"""
+        <div style="text-align:center; margin-top:1rem;">
+            <svg width="170" height="170" viewBox="0 0 170 170" xmlns="http://www.w3.org/2000/svg" style="animation: bob 3.2s ease-in-out infinite;">
+                <circle cx="85" cy="85" r="65" fill="#ffe7a3"/>
+                <circle cx="85" cy="90" r="45" fill="#fff7db"/>
+                <ellipse cx="55" cy="30" rx="18" ry="30" transform="rotate(-15 55 30)" fill="#ffd45e"/>
+                <ellipse cx="115" cy="30" rx="18" ry="30" transform="rotate(15 115 30)" fill="#ffd45e"/>
+                {mood_eyes}
+                <ellipse cx="85" cy="82" rx="7" ry="5" fill="#7b6424"/>
+                {mood_mouth}
+                <path d="M55 80 H30" stroke="#b08a2f" stroke-width="2.5" stroke-linecap="round"/>
+                <path d="M55 87 H28" stroke="#b08a2f" stroke-width="2.5" stroke-linecap="round"/>
+                <path d="M115 80 H140" stroke="#b08a2f" stroke-width="2.5" stroke-linecap="round"/>
+                <path d="M115 87 H142" stroke="#b08a2f" stroke-width="2.5" stroke-linecap="round"/>
+            </svg>
+            <div style="font-size:1.05rem; font-weight:700; color:#5b4513; margin-top:0.5rem;">
+                {mood_text}
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
