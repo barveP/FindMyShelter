@@ -4,13 +4,13 @@ A data-driven recommendation system that helps you find the best shelter for a l
 
 ## How It Works
 
-Enter a pet's details and the system runs them through machine learning models trained on real shelter data from Long Beach and San Jose. It returns the adoption probability for each shelter and recommends the one with the highest chance of adoption.
+Enter a pet's details and the system runs them through machine learning models trained on real shelter data from Long Beach, San Jose, and Austin. It returns the adoption probability for each shelter and recommends the one with the highest chance of adoption.
 
 ## Shelters Included
 
 - Long Beach Animal Shelter (Long Beach, CA)
 - San Jose Animal Services (San Jose, CA)
-- Austin Animal Center (Austin, TX) -- coming soon
+- Austin Animal Center (Austin, TX)
 
 ## Project Structure
 ```
